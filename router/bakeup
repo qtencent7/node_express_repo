@@ -1,0 +1,11 @@
+INSERT INTO test_user 
+  (username, password)
+  VALUES
+  ('${username}', '${password}')
+  where not exists (SELECT username FROM test_user WHERE username = '${username}')
+
+INSERT INTO test_user (username, password)
+  SELECT * FROM (SELECT '${username}', '${password}') AS tmp
+  WHERE NOT EXISTS (
+      SELECT username FROM test_user WHERE username = '${username}'
+  )

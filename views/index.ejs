@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.10/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div>
+            <h1>用户： {{ info }}</h1>
+        </div>
+        <ul>
+            <li v-for="item in list">
+                <span>name: </span>
+                <em style="color: darkcyan;">{{ item.name }}</em>
+                <span>password: </span>
+                <em style="color: red;">{{ item.password }}</em>
+            </li>
+        </ul>
+        <table>
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>author</th>
+                    <th>date</th>
+                    <th>img</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="item in books">
+                    <td>{{item.id}}</td>
+                    <td>{{item.title}}</td>
+                    <td>{{item.author}}</td>
+                    <td>{{new Date(item.date).toLocaleDateString()}}</td>
+                    <td><img :src="item.imgUrl" alt="img" style="width: 200px; height: 150px;"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button @click="getList">get list</button>
+        <button @click="getbooks">get books</button>
+    </div>
+    <script>
+        const vm = new Vue({
+            el: "#app",
+            data() {
+                return {
+                    list: [],
+                    books: [],
+                    info: ""
+                }
+            },
+            mounted() {
+                this.getinfo()
+            },
+            methods: {
+                getinfo() {
+                    axios.get('/user/info').then(res => {
+                        console.log(res)
+                        this.info = res.data[0].name
+                    })
+                },
+                getList() {
+                    axios.get('/list/users').then(res => {
+                        this.list = res.data
+                    })
+                },
+                getbooks() {
+                    axios.get('/list/books').then(res => {
+                        this.books = res.data
+                    })
+                }
+            }
+        })
+    </script>
+</body>
+</html>

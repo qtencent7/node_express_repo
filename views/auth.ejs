@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.10/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <form>
+            <label for="username">username: </label>
+            <input type="text" id="username" name="username">
+            <br>
+            <label for="password">password: </label>
+            <input type="text" id="password" name="password">
+            <br>
+            <input type="submit" value="注册" @click="putRegister">
+            <input type="submit" value="登录" @click="putLogin">
+        </form>
+        <button @click="test">test</button>
+    </div>
+
+    <script>
+        const vm = new Vue({
+            el: "#app",
+            methods: {
+                putRegister(e) {
+                    e.preventDefault()
+                    let formDom = document.getElementsByTagName("form")[0]
+                    let form = new FormData(formDom)
+                    let username = form.get("username")
+                    let password = form.get("password")
+                    console.log(username, password)
+                        axios.post("http://localhost:3000/user/register", {
+                            username,
+                            password
+                        }).then(res => {
+                            console.log(res)
+                        }).catch(err => {
+                            console.error(err)
+                        })
+                },
+                putLogin(e) {
+                    e.preventDefault()
+                    let formDom = document.getElementsByTagName("form")[0]
+                    let form = new FormData(formDom)
+                    let username = form.get("username")
+                    let password = form.get("password")
+                    console.log(username, password)
+                        axios.post("http://localhost:3000/user/login", {
+                            username,
+                            password
+                        }).then(res => {
+                            console.log(res)
+                            localStorage.setItem("token", res.data)
+                        }).catch(err => {
+                            console.error(err)
+                        })
+                },
+                test() {
+                    const token = localStorage.getItem("token")
+                    axios.defaults.headers.common['token'] = token;
+                    axios.get("http://localhost:3000/user/testtoken").then(res => {
+                        console.log(res)
+                    }).catch(err => {
+                        console.error(err)
+                    })
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>

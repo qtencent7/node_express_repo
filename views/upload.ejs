@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="GBK">
+  <title>nodejs文件上传</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.10/dist/vue.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <form>
+      <input name="fileUpload" type="file" id="file" />
+      <img src="" alt="">
+      <input type="submit" value="上传" @click="upload">
+    </form>
+  </div>
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      methods: {
+        upload(e) {
+          e.preventDefault();
+          const file = document.querySelector('#file').files[0]
+          var fileSuffixIndex = file.name.lastIndexOf(".")
+          var fileSuffix = file.name.substr(fileSuffixIndex + 1)
+          if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'psd', 'svg'].indexOf(fileSuffix.toLowerCase()) !== -1) {
+            this.uploadImg(file)
+          } else if (['mp4', 'm2v', 'mkv', 'rmvb', 'wmv', 'avi', 'flv', 'mov', 'm4v'].indexOf(fileSuffix.toLowerCase()) !== -1) {
+            this.uploadVideo(file)
+          }
+        },
+        uploadImg(file) {
+          let formData = new FormData()
+          formData.append('file', file)
+          axios.post("http://localhost:3000/file/upload", formData).then(res => {
+            console.log(res)
+          }).catch(err => {
+            console.error(err)
+          })
+        },
+        async uploadVideo(file) {
+          console.log("您上传的是视频")
+          const fileSize = file.size / 1024 / 1024
+          if (fileSize <= 100) {
+            let formData = new FormData()
+            formData.append('file', file)
+            axios.post("http://localhost:3000/file/upload", formData).then(res => {
+              console.log(res)
+            }).catch(err => {
+              console.error(err)
+            })
+          } else if (fileSize > 100 && fileSize <= 500) {
+            const fileChunks = this.createVideoChunks(file, 1024 * 1024 * 100)
+            await this.uploadFileChunks(fileChunks, file.name)
+            await this.mergeFileChunks(file.name)
+          } else {
+            console.log(fileSize, 'file size')
+            alert("您上传的文件过大，超过500mb,不予上传")
+          }
+        },
+        createVideoChunks(file, size) {
+          let fileChunks = [],
+            cur = 0;
+          while (cur < file.size) {
+            fileChunks.push(file.slice(cur, cur + size));
+            cur += size;
+          }
+          return fileChunks;
+        },
+        async uploadFileChunks(fileChunks, filename) {
+          const chunksList = fileChunks.map((chunk, index) => {
+            let formData = new FormData();
+            formData.append('filename', filename);
+            formData.append('hash', index);
+            formData.append('chunk', chunk);
+            return {
+              formData
+            };
+          });
+
+          const uploadList = chunksList.map(({
+            formData
+          }) => axios.post("http://localhost:3000/file/uploadbatch", formData));
+          
+          await Promise.all(uploadList);
+          console.log("浏览器告知视频批量上传成功")
+        },
+        async mergeFileChunks(filename) {
+          await axios({
+            method: 'get',
+            url: 'http://localhost:3000/file/merge',
+            params: {
+              filename
+            }
+          });
+          console.log("提示视频合并成功")
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
